@@ -59,7 +59,7 @@ certain features which you may not need.
 checks for it. If set, TowerCore will include a small toolkit for declaring
 Harmony patches.
 
-`<Tower_EnableNewtonsoft>true</Tower_EnableNewtonsoft>`: this flag tells
+`<Tower_EnableCrossConfig>true</Tower_EnableCrossConfig>`: this flag tells
 TowerCore to include code to read other mods' config files. This requires
 access to Newtonsoft's json parser, so that reference will be included
 automatically.

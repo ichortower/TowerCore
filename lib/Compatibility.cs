@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Reflection;
 using System.Reflection.Emit;
 
-#if TOWERCORE_USING_NEWTONSOFT
+#if TOWERCORE_USING_CROSSCONFIG
 using Newtonsoft.Json.Linq;
 using System.IO;
 #endif
@@ -41,7 +41,7 @@ public class Compatibility
     }
 
 
-#if TOWERCORE_USING_NEWTONSOFT
+#if TOWERCORE_USING_CROSSCONFIG
 
     /*
      * Parse a config.json from another mod.
@@ -75,7 +75,7 @@ public class Compatibility
         return false;
     }
 
-#endif // TOWERCORE_USING_NEWTONSOFT
+#endif // TOWERCORE_USING_CROSSCONFIG
 
 
     /*

@@ -6,8 +6,10 @@
     <PropertyGroup Label="Compile Flags" >
         <DefineConstants Condition="'$(EnableHarmony)' == 'true'"
                 >$(DefineConstants);TOWERCORE_USING_HARMONY</DefineConstants>
-        <DefineConstants Condition="'$(Tower_EnableNewtonsoft)' == 'true'"
-                >$(DefineConstants);TOWERCORE_USING_NEWTONSOFT</DefineConstants>
+        <DefineConstants Condition="'$(Tower_EnableCrossConfig)' == 'true'"
+                >$(DefineConstants);TOWERCORE_USING_CROSSCONFIG</DefineConstants>
+        <Tower_EnableNewtonsoft Condition="'$(Tower_EnableCrossConfig)' == 'true'"
+                >true</Tower_EnableNewtonsoft>
     </PropertyGroup>
     <ItemGroup>
         <Compile Include="$(MSBuildThisFileDirectory)lib\*.cs" />
