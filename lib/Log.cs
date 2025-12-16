@@ -1,4 +1,5 @@
 using StardewModdingAPI;
+using System.Diagnostics;
 
 namespace ichortower.TowerCore;
 
@@ -7,8 +8,13 @@ public class Log
     public static void Trace(string text) {
         Main.Monitor?.Log(text, LogLevel.Trace);
     }
+    [Conditional("DEBUG")]
     public static void Debug(string text) {
         Main.Monitor?.Log(text, LogLevel.Debug);
+    }
+    [Conditional("DEBUG")]
+    public static void DebugWarn(string text) {
+        Main.Monitor?.Log(text, LogLevel.Warn);
     }
     public static void Info(string text) {
         Main.Monitor?.Log(text, LogLevel.Info);
