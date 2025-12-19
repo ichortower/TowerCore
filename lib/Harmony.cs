@@ -62,20 +62,20 @@ public class Patches
         bool ret = true;
         MethodInfo orig;
         foreach (TargetMethod attr in targets) {
-            // TODO method type
-            if ((attr.ArgumentTypes?.Length ?? 0) > 0) {
-                orig = attr.TargetType.GetMethod(attr.MethodName,
-                        AllAccess, null, attr.ArgumentTypes, null);
-            }
-            else {
-                orig = attr.TargetType.GetMethod(attr.MethodName, AllAccess);
-            }
-            if (orig is null) {
-                err = $"TargetMethod not found: {attr.TargetType}.{attr.MethodName}";
-                ret = false;
-                continue;
-            }
             try {
+                // TODO method type
+                if ((attr.ArgumentTypes?.Length ?? 0) > 0) {
+                    orig = attr.TargetType.GetMethod(attr.MethodName,
+                            AllAccess, null, attr.ArgumentTypes, null);
+                }
+                else {
+                    orig = attr.TargetType.GetMethod(attr.MethodName, AllAccess);
+                }
+                if (orig is null) {
+                    err = $"TargetMethod not found: {attr.TargetType}.{attr.MethodName}";
+                    ret = false;
+                    continue;
+                }
                 HarmonyMethod patch = new(func.ReflectedType, func.Name);
                 if (patchType.Value == PatchTypes.Prefix) {
                     Harmony.Patch(original: orig, prefix: patch);
