@@ -1,5 +1,6 @@
 using System;
 using System.Reflection;
+using System.Reflection.Emit;
 
 namespace ichortower.TowerCore;
 
@@ -55,6 +56,35 @@ public class ConsoleCommands
                 $"({func.ReflectedType.FullName}.{func.Name})");
         return true;
     }
+
+    /*
+     * Call a console command by hooking into SMAPI's command parser and queueing it directly.
+     * e.g.:   ichortower.TowerCore.ConsoleCommands.QueueCommand.Value("patch update");
+     *
+     * Big thanks to Shockah for this. It's wizardry.
+     */
+    public static Lazy<Action<string>> QueueCommand = new(() => {
+        var sCoreType = Type.GetType(
+                "StardewModdingAPI.Framework.SCore,StardewModdingAPI")!;
+        var commandQueueType = Type.GetType(
+                "StardewModdingAPI.Framework.CommandQueue,StardewModdingAPI")!;
+        var sCoreGetter = sCoreType.GetProperty("Instance",
+                BindingFlags.NonPublic | BindingFlags.Static).GetGetMethod(true);
+        var rawCommandQueueField = sCoreType.GetField("RawCommandQueue",
+                BindingFlags.NonPublic | BindingFlags.Instance);
+        var queueAddMethod = commandQueueType.GetMethod("Add",
+                BindingFlags.Public | BindingFlags.Instance);
+
+        var method = new DynamicMethod("QueueConsoleCommand",
+                null, new Type[] {typeof(string)});
+        var il = method.GetILGenerator();
+        il.Emit(OpCodes.Call, sCoreGetter);
+        il.Emit(OpCodes.Ldfld, rawCommandQueueField);
+        il.Emit(OpCodes.Ldarg_0);
+        il.Emit(OpCodes.Call, queueAddMethod);
+        il.Emit(OpCodes.Ret);
+        return method.CreateDelegate<Action<string>>();
+    });
 }
 
 [AttributeUsage(AttributeTargets.Method)]
