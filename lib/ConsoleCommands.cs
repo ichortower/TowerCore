@@ -52,7 +52,7 @@ public class ConsoleCommands
             err = e.Message;//$"Method signature not compatible (expected <string, string[]>)";
             return false;
         }
-        Log.Trace($"Registered command '{command.CommandWord}' " +
+        Log.Trace($"Registered console command '{command.CommandWord}' " +
                 $"({func.ReflectedType.FullName}.{func.Name})");
         return true;
     }
