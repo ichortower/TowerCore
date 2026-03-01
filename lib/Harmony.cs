@@ -8,22 +8,65 @@ namespace ichortower.TowerCore;
 public class Patches
 {
     /*
-     * Search for and apply all declared Harmony patches in the given class. This isn't really
-     * a good idea, since Harmony already has attributes and a PatchAll function, but I have an
-     * unfounded hope that doing this will let me avoid the SMAPI rewriting problems, and it
-     * should get me a few features (like being able to continue if one patch fails).
-     *
-     * I implemented my own attributes for this, since Harmony's are slightly awkward for my
-     * intended setup. As a result, don't expect this to work for other mods (or other authors).
+     * It is certainly frivolous to do Harmony.PatchAll at home, but I have my own ideas about
+     * how the patch-declaring attributes should be and I'm in charge of my own mods.
      * 
-     * Returns true if no problems were encountered (all found patches were applied successfully,
-     * or no patches were found so no work could be done), or false if at least one patch failed
-     * to apply. In either case, `out int count` will be set to the number of patches that
-     * succeeded.
+     * I doubt that this running in the mod's assembly instead of Harmony's will get around
+     * the inability of SMAPI's rewriters to fix annotated patches when the game updates
+     * (it's probably the use of reflection that causes that, rather than SMAPI only rewriting
+     * the mod assembly and not Harmony's), but I can dream.
+     *
+     * Returns true if no problems were encountered (all found patches were applied
+     * successfully, or no patches were found so no work could be done), or false if at least
+     * one patch failed to apply.
      */
-    public static bool Apply(Type t, out int count)
+    public static bool Apply()
     {
-        MethodInfo[] funcs = t.GetMethods(BindingFlags.Static | BindingFlags.Public);
+        return Apply(Assembly.GetExecutingAssembly(), out var _);
+    }
+
+    /*
+     * Like the above, but takes a given assembly and returns (out) the number of patches
+     * successfully applied.
+     *
+     * If any patches fail to apply, an overall error message will be logged.
+     */
+    public static bool Apply(Assembly assembly, out int count)
+    {
+        count = 0;
+        bool ret = true;
+        if (assembly is null) {
+            Log.Warn($"Patches.Apply was called with a null assembly, so no work was done.");
+            return false;
+        }
+        foreach (Type type in assembly.GetTypes()) {
+            bool allFine = Apply(type, out int thisCount, reportOverall: false);
+            if (!allFine) {
+                ret = false;
+            }
+            count += thisCount;
+        }
+        if (!ret) {
+            Log.Error("Some Harmony patches failed to apply. Please report this to ichortower," +
+                    " along with this SMAPI log.");
+        }
+        return ret;
+    }
+
+    /*
+     * Applies all declared patches in the given Type, by checking all methods for the
+     * proper attributes. This function is the workhorse that the assembly-level Apply
+     * functions call.
+     *
+     * Return value and reported count are as the above versions.
+     *
+     * If reportOverall is true, then in addition to logging each patch error as it happens,
+     * an overall error message will be logged if any patches failed.
+     */
+    public static bool Apply(Type type, out int count, bool reportOverall = true)
+    {
+        MethodInfo[] funcs = type.GetMethods(BindingFlags.Public | BindingFlags.NonPublic |
+                                             BindingFlags.Static);
         count = 0;
         bool ret = true;
         foreach (var func in funcs) {
@@ -37,7 +80,7 @@ public class Patches
             }
             ++count;
         }
-        if (!ret) {
+        if (reportOverall && !ret) {
             Log.Error("Some Harmony patches failed to apply. Please report this to ichortower," +
                     " along with this SMAPI log.");
         }
