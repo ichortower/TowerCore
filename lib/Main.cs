@@ -34,7 +34,7 @@ public class Main
     {
         Mod = modref;
         SmapiEvents.Register();
-        //ConsoleCommands.Register();
+        ConsoleCommands.Register();
         HarmonyPatches.Apply();
     }
 

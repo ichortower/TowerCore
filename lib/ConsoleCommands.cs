@@ -6,12 +6,39 @@ namespace ichortower.TowerCore;
 
 public class ConsoleCommands
 {
+    public static bool Register()
+    {
+        return Register(Assembly.GetExecutingAssembly(), out _);
+    }
+
+    public static bool Register(Assembly assembly, out int count)
+    {
+        count = 0;
+        bool ret = true;
+        if (assembly is null) {
+            Log.Warn($"ConsoleCommands.Register was called with a null assembly, so no work was done.");
+            return false;
+        }
+        foreach (Type type in assembly.GetTypes()) {
+            bool allFine = Register(type, out int thisCount, reportOverall: false);
+            if (!allFine) {
+                ret = false;
+            }
+            count += thisCount;
+        }
+        if (!ret) {
+            Log.Error("Some console commands failed to register. Please report this to ichortower," +
+                    " along with this SMAPI log.");
+        }
+        return ret;
+    }
+
     /*
      * Search for and apply all declared console command handlers in the given class.
      * Like with the Harmony system, this relies on an attribute I defined for this
      * purpose.
      */
-    public static bool Register(Type t, out int count)
+    public static bool Register(Type t, out int count, bool reportOverall = true)
     {
         MethodInfo[] funcs = t.GetMethods(BindingFlags.Static | BindingFlags.Public);
         count = 0;
@@ -27,7 +54,7 @@ public class ConsoleCommands
             }
             ++count;
         }
-        if (!ret) {
+        if (reportOverall && !ret) {
             Log.Error("Some console commands failed to register. Please report this to " +
                     "ichortower, along with this SMAPI log.");
         }
@@ -49,7 +76,7 @@ public class ConsoleCommands
                     (Action<string, string[]>) func.CreateDelegate(typeof(Action<string, string[]>)));
         }
         catch (Exception e) {
-            err = e.Message;//$"Method signature not compatible (expected <string, string[]>)";
+            err = e.Message;
             return false;
         }
         Log.Trace($"Registered console command '{command.CommandWord}' " +
