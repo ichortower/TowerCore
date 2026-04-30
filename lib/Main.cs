@@ -13,15 +13,32 @@ namespace ichortower.TowerCore;
 public class Main
 {
     /*
-     * It is the individual mod's responsibility to set this reference. i.e.:
+     * It is the client's responsibility to call this function. i.e.:
+     *
+     * public override void Entry(IModHelper helper) {
+     *     ichortower.TowerCore.Main.Init(this);
+     * }
+     *
+     * This will both set the mod reference (critical for most support functions
+     * to work) and call the assorted attribute-based registry functions. If you
+     * aren't using some of those features and you are very concerned about
+     * performance, you can manually do just the ones you need:
      *
      * public override void Entry(IModHelper helper) {
      *     ichortower.TowerCore.Main.Mod = this;
-     *     ...
+     *     ichortower.TowerCore.HarmonyPatches.Apply();
      * }
      *
-     * You may experience NREs if you fail to do this before using the lib.
      */
+    public static void Init(IMod modref)
+    {
+        Mod = modref;
+        SmapiEvents.Register();
+        //ConsoleCommands.Register();
+        HarmonyPatches.Apply();
+    }
+
+
     public static IMod Mod = null;
 
     public static IModHelper Helper {

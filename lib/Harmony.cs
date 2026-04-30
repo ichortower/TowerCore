@@ -5,7 +5,7 @@ using System.Reflection;
 
 namespace ichortower.TowerCore;
 
-public class Patches
+public class HarmonyPatches
 {
     /*
      * It is certainly frivolous to do Harmony.PatchAll at home, but I have my own ideas about
@@ -36,7 +36,7 @@ public class Patches
         count = 0;
         bool ret = true;
         if (assembly is null) {
-            Log.Warn($"Patches.Apply was called with a null assembly, so no work was done.");
+            Log.Warn($"HarmonyPatches.Apply was called with a null assembly, so no work was done.");
             return false;
         }
         foreach (Type type in assembly.GetTypes()) {
@@ -132,8 +132,8 @@ public class Patches
                 else if (patchType.Value == PatchTypes.Finalizer) {
                     Harmony.Patch(original: orig, finalizer: patch);
                 }
-                Log.Trace($"Patched '{orig.ReflectedType.FullName}.{orig.Name}'" +
-                        $" ({patchType.Value.ToString()})");
+                Log.Trace($"Patched ({patchType.Value.ToString()}) " +
+                        $"'{orig.ReflectedType.FullName}.{orig.Name}'");
             }
             catch (Exception e) {
                 err = e.ToString();
