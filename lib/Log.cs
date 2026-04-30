@@ -3,6 +3,15 @@ using System.Diagnostics;
 
 namespace ichortower.TowerCore;
 
+/*
+ * Just short aliases for SMAPI's log functions, since I find
+ *    Log.Warn("message");
+ * much more pleasant to both read and type than
+ *    Mod.Monitor.Log("message", LogLevel.Warn);
+ *
+ * As a bonus, Debug and DebugWarn are conditional on the DEBUG build level, so
+ * they get optimized out when compiling for release.
+ */
 public class Log
 {
     public static void Trace(string text) {
