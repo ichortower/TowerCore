@@ -85,19 +85,42 @@ public class SmapiEvents
             }
             ParameterInfo[] args = func.GetParameters();
             if (args.Length < 2) {
+                Log.Warn($"Method '{func.ReflectedType.FullName}.{func.Name}' was flagged " +
+                        "for SMAPI event registry, but did not have enough parameters.");
+                ret = false;
+                continue;
+            }
+            // only static methods allowed (see below)
+            if (!func.IsStatic) {
+                Log.Warn($"Non-static method '{func.ReflectedType.FullName}.{func.Name}' " +
+                        "was flagged for SMAPI event registry. Only static methods are supported.");
+                ret = false;
                 continue;
             }
             Type which = args[1].ParameterType;
-            if (!Handlers.TryGetValue(which, out (object o, EventInfo evt) tuple)) {
+            if (!Handlers.TryGetValue(which, out (object obj, EventInfo evt) tuple)) {
                 Log.Error($"Unsupported event using args type '{which.Name}'");
                 ret = false;
                 continue;
             }
-            var deleg = func.CreateDelegate(typeof(EventHandler<>).MakeGenericType(which));
-            tuple.evt.AddEventHandler(tuple.o, deleg);
-            Log.Debug($"Registered handler '{func.ReflectedType.FullName}.{func.Name}'" +
-                    $" for event '{tuple.evt.Name}'");
-            ++count;
+            try {
+                // This particular version of CreateDelegate won't bind to an instance method;
+                // hence the try/catch (although we early exit on non-statics above).
+                // So why use it instead of one that allows instance methods? When registering
+                // event handlers this way, we don't have access to a class instance to provide.
+                // We could allow it anyway, with `null` as the instance, but that invites
+                // NREs when invoking, since `this` would be null. I think it's better to
+                // prevent non-statics.
+                var deleg = func.CreateDelegate(typeof(EventHandler<>).MakeGenericType(which));
+                tuple.evt.AddEventHandler(tuple.obj, deleg);
+                Log.Debug($"Registered handler '{func.ReflectedType.FullName}.{func.Name}'" +
+                        $" for event '{tuple.evt.Name}'");
+                ++count;
+            }
+            catch (Exception e) {
+                Log.Error(e.ToString());
+                ret = false;
+            }
         }
         if (reportOverall && !ret) {
             Log.Error("Some SMAPI events failed to register. Please report this to ichortower," +
